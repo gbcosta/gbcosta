@@ -5,7 +5,7 @@
 
 - 🌱 I’m currently learning **Redux, Nodejs and c#**
 
-- 👨‍💻 All of my projects are available at [https://gbcostasant.netlify.app/](https://gbcosta.github.io/)
+- 👨‍💻 All of my projects are available at [https://gbcostasant.netlify.app/](https://gbcostasant.netlify.app/)
 
 - 📫 How to reach me **gbcossant@gmail.com**
 
