@@ -3,7 +3,7 @@
 
 - 🔭 I’m currently working on **Sequor**
 
-- 🌱 I’m currently learning **Redux, Nodejs, prisma, sql and api rest**
+- 🌱 I’m currently learning **Redux, Nodejs, Prisma, SQL and API Rest**
 
 - 👨‍💻 All of my projects are available at [https://gbcostasant.netlify.app/](https://gbcostasant.netlify.app/)
 
