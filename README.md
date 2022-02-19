@@ -1,7 +1,7 @@
 <h1 align="center">Hi 👋, I'm Gabriel</h1>
 <h3 align="center">A passionate frontend developer from Brazil</h3>
 
-- 🔭 I’m currently working on **Sequor**
+- 🔭 I’m currently working on [Sequor](https://www.sequor.com.br/)
 
 - 🌱 I’m currently learning **Redux, Nodejs, Prisma, SQL and API Rest**
 
