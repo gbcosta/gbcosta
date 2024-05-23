@@ -3,7 +3,7 @@
 
 - 🔭 I’m currently searching for a new oportunity
 
-- 🌱 I’m currently learning **Redux, Nodejs, Prisma, SQL and API Rest**
+- 🌱 I’m currently learning **Golang**
 
 - 👨‍💻 All of my projects are available at [https://gbcostasant.netlify.app/](https://gbcostasant.netlify.app/)
 
