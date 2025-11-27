@@ -2,7 +2,7 @@
 </div>  
   
 
-### <div align="center">I'm Gabriel, a  full-stack developer</div>  
+### <div align="center">I'm Gabriel, a Front-end developer</div>  
   
 
 - 🔭 I’m currently searching for opportunities.  
