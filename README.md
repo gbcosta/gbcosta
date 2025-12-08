@@ -8,10 +8,10 @@
 - 🔭 I’m currently searching for opportunities.  
   
 
-- 🌱 I’m currently learning Golang  
+- 🌱 I’m currently learning Rust & gleam for fun
   
 
-- ⚡ Fun fact: I use Vim  
+- ⚡ Fun fact: I use Arch ;)
   
 
 <br/>  
