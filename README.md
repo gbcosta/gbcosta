@@ -1,7 +1,7 @@
 Hi ![](https://user-images.githubusercontent.com/18350557/176309783-0785949b-9127-417c-8b55-ab5a4333674e.gif) My name is Gabriel
 ================================================================================================================================
 
-Front End Dev
+Front-end Dev
 -------------
 
 "Hey there! I’m Gabriel. I work as a Front-end Developer, though I know my way around the Back-end too. I mostly focus on TypeScript and React, but I love experimenting with C++ and C# on the side—especially when I’m making games in my spare time."
