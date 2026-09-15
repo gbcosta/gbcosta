@@ -6,21 +6,20 @@ on:
   workflow_dispatch:
 
 jobs:
-  generate:
+  snake:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Generate Snake
+      - name: Generate snake
         uses: Platane/snk@v3
         with:
           github_user_name: ${{ github.repository_owner }}
           outputs: |
             dist/snake.svg
-            dist/snake-dark.svg?palette=github-dark
 
-      - name: Push Snake
+      - name: Publish snake
         uses: crazy-max/ghaction-github-pages@v4
         with:
           build_dir: dist
         env:
-          GH_PAT: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
