@@ -1,0 +1,43 @@
+name: Generate Snake
+
+on:
+  schedule:
+    - cron: "0 0 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  snake:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Generate snake
+        uses: Platane/snk@v3
+        with:
+          github_user_name: ${{ github.repository_owner }}
+          outputs: |
+            dist/snake.svg
+
+      - name: Push Snake
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git clone --depth 1 --branch snake-output https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git output || \
+            git clone --depth 1 --no-checkout https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git output
+
+          cd output
+
+          git checkout --orphan snake-output
+
+          rm -rf ./*
+          cp ../dist/snake.svg .
+
+          git add snake.svg
+          git commit -m "chore: update contribution snake" || exit 0
+
+          git push --force origin snake-output
