@@ -1,0 +1,214 @@
+name: Generate GitHub Stats
+
+on:
+  schedule:
+    - cron: "0 0 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  stats:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Generate stats SVG
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p dist
+
+          python3 - <<'PY'
+          import json
+          import os
+          import urllib.request
+
+          token = os.environ["GH_TOKEN"]
+
+          query = """
+          query($login: String!) {
+            user(login: $login) {
+              contributionsCollection {
+                totalCommitContributions
+                totalPullRequestContributions
+                totalIssueContributions
+              }
+              repositories(ownerAffiliations: OWNER, first: 100) {
+                nodes {
+                  stargazerCount
+                }
+              }
+            }
+          }
+          """
+
+          body = json.dumps({
+              "query": query,
+              "variables": {
+                  "login": "gbcosta"
+              }
+          }).encode()
+
+          request = urllib.request.Request(
+              "https://api.github.com/graphql",
+              data=body,
+              headers={
+                  "Authorization": f"Bearer {token}",
+                  "Content-Type": "application/json",
+                  "User-Agent": "github-actions"
+              }
+          )
+
+          with urllib.request.urlopen(request) as response:
+              result = json.load(response)
+
+          if "errors" in result:
+              raise RuntimeError(result["errors"])
+
+          user = result["data"]["user"]
+
+          contributions = user["contributionsCollection"]
+
+          commits = contributions["totalCommitContributions"]
+          prs = contributions["totalPullRequestContributions"]
+          issues = contributions["totalIssueContributions"]
+
+          stars = sum(
+              repo["stargazerCount"]
+              for repo in user["repositories"]["nodes"]
+          )
+
+          svg = f'''<?xml version="1.0" encoding="UTF-8"?>
+          <svg xmlns="http://www.w3.org/2000/svg"
+               width="495"
+               height="195"
+               viewBox="0 0 495 195">
+
+            <rect
+              width="495"
+              height="195"
+              rx="10"
+              fill="#0d1117"/>
+
+            <text
+              x="25"
+              y="40"
+              fill="#58a6ff"
+              font-size="22"
+              font-family="Arial, sans-serif"
+              font-weight="bold">
+              GitHub Stats
+            </text>
+
+            <text
+              x="25"
+              y="75"
+              fill="#c9d1d9"
+              font-size="16"
+              font-family="Arial, sans-serif">
+              Commits
+            </text>
+
+            <text
+              x="300"
+              y="75"
+              fill="#f0f6fc"
+              font-size="16"
+              font-family="Arial, sans-serif"
+              font-weight="bold">
+              {commits}
+            </text>
+
+            <text
+              x="25"
+              y="105"
+              fill="#c9d1d9"
+              font-size="16"
+              font-family="Arial, sans-serif">
+              Pull Requests
+            </text>
+
+            <text
+              x="300"
+              y="105"
+              fill="#f0f6fc"
+              font-size="16"
+              font-family="Arial, sans-serif"
+              font-weight="bold">
+              {prs}
+            </text>
+
+            <text
+              x="25"
+              y="135"
+              fill="#c9d1d9"
+              font-size="16"
+              font-family="Arial, sans-serif">
+              Issues
+            </text>
+
+            <text
+              x="300"
+              y="135"
+              fill="#f0f6fc"
+              font-size="16"
+              font-family="Arial, sans-serif"
+              font-weight="bold">
+              {issues}
+            </text>
+
+            <text
+              x="25"
+              y="165"
+              fill="#c9d1d9"
+              font-size="16"
+              font-family="Arial, sans-serif">
+              Stars
+            </text>
+
+            <text
+              x="300"
+              y="165"
+              fill="#f0f6fc"
+              font-size="16"
+              font-family="Arial, sans-serif"
+              font-weight="bold">
+              {stars}
+            </text>
+
+          </svg>'''
+
+          with open("dist/stats.svg", "w", encoding="utf-8") as file:
+              file.write(svg.strip())
+
+          print("Generated stats.svg")
+          PY
+
+      - name: Validate SVG
+        run: |
+          test -f dist/stats.svg
+          head -n 2 dist/stats.svg
+
+      - name: Push Stats
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git clone \
+            --branch stats-output \
+            --single-branch \
+            "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" \
+            output
+
+          cp dist/stats.svg output/stats.svg
+
+          cd output
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add stats.svg
+
+          git commit -m "chore: update GitHub stats" || exit 0
+
+          git push origin stats-output

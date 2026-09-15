@@ -1,0 +1,240 @@
+name: Generate Top Languages
+
+on:
+  schedule:
+    - cron: "0 0 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  languages:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Generate languages SVG
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p dist
+
+          python3 - <<'PY'
+          import json
+          import os
+          import urllib.request
+          from collections import defaultdict
+
+          token = os.environ["GH_TOKEN"]
+
+          query = """
+          query($login: String!, $cursor: String) {
+            user(login: $login) {
+              repositories(
+                ownerAffiliations: OWNER
+                first: 100
+                after: $cursor
+                orderBy: {field: UPDATED_AT, direction: DESC}
+              ) {
+                pageInfo {
+                  hasNextPage
+                  endCursor
+                }
+                nodes {
+                  name
+                  languages(first: 10, orderBy: {field: SIZE, direction: DESC}) {
+                    edges {
+                      size
+                      node {
+                        name
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+          """
+
+          languages = defaultdict(int)
+          cursor = None
+
+          while True:
+              body = json.dumps({
+                  "query": query,
+                  "variables": {
+                      "login": "gbcosta",
+                      "cursor": cursor
+                  }
+              }).encode()
+
+              request = urllib.request.Request(
+                  "https://api.github.com/graphql",
+                  data=body,
+                  headers={
+                      "Authorization": f"Bearer {token}",
+                      "Content-Type": "application/json",
+                      "User-Agent": "github-actions"
+                  }
+              )
+
+              with urllib.request.urlopen(request) as response:
+                  result = json.load(response)
+
+              if "errors" in result:
+                  raise RuntimeError(result["errors"])
+
+              repos = result["data"]["user"]["repositories"]
+
+              for repo in repos["nodes"]:
+                  for edge in repo["languages"]["edges"]:
+                      language = edge["node"]["name"]
+                      size = edge["size"]
+                      languages[language] += size
+
+              if not repos["pageInfo"]["hasNextPage"]:
+                  break
+
+              cursor = repos["pageInfo"]["endCursor"]
+
+          total = sum(languages.values())
+
+          if total == 0:
+              raise RuntimeError("No language data found.")
+
+          top_languages = sorted(
+              languages.items(),
+              key=lambda x: x[1],
+              reverse=True
+          )[:6]
+
+          # GitHub language colors
+          colors = {
+              "JavaScript": "#f1e05a",
+              "TypeScript": "#3178c6",
+              "Python": "#3572A5",
+              "Java": "#b07219",
+              "C++": "#f34b7d",
+              "C": "#555555",
+              "C#": "#178600",
+              "Go": "#00ADD8",
+              "Rust": "#dea584",
+              "HTML": "#e34c26",
+              "CSS": "#563d7c",
+              "Shell": "#89e051",
+              "Dockerfile": "#384d54",
+              "Vue": "#41b883",
+              "Kotlin": "#A97BFF",
+              "Swift": "#F05138",
+              "Dart": "#00B4AB"
+          }
+
+          rows = ""
+
+          y = 75
+
+          for language, size in top_languages:
+              percentage = (size / total) * 100
+              color = colors.get(language, "#8b949e")
+
+              rows += f'''
+              <circle
+                cx="35"
+                cy="{y - 5}"
+                r="5"
+                fill="{color}"/>
+
+              <text
+                x="50"
+                y="{y}"
+                fill="#c9d1d9"
+                font-size="15"
+                font-family="Arial, sans-serif">
+                {language}
+              </text>
+
+              <text
+                x="430"
+                y="{y}"
+                fill="#f0f6fc"
+                font-size="15"
+                font-family="Arial, sans-serif"
+                text-anchor="end">
+                {percentage:.1f}%
+              </text>
+              '''
+
+              y += 22
+
+          svg = f'''<?xml version="1.0" encoding="UTF-8"?>
+          <svg xmlns="http://www.w3.org/2000/svg"
+               width="495"
+               height="225"
+               viewBox="0 0 495 225">
+
+            <rect
+              width="495"
+              height="225"
+              rx="10"
+              fill="#0d1117"/>
+
+            <text
+              x="25"
+              y="40"
+              fill="#58a6ff"
+              font-size="22"
+              font-family="Arial, sans-serif"
+              font-weight="bold">
+              Top Languages
+            </text>
+
+            {rows}
+
+          </svg>'''
+
+          with open("dist/languages.svg", "w", encoding="utf-8") as file:
+              file.write(svg.strip())
+
+          print("Generated languages.svg")
+
+          for language, size in top_languages:
+              percentage = (size / total) * 100
+              print(f"{language}: {percentage:.1f}%")
+          PY
+
+      - name: Validate SVG
+        run: |
+          test -f dist/languages.svg
+          head -n 2 dist/languages.svg
+
+      - name: Push Languages
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git clone \
+            --depth 1 \
+            --branch languages-output \
+            --single-branch \
+            "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" \
+            output || \
+          git clone \
+            --depth 1 \
+            "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" \
+            output
+
+          cd output
+
+          git checkout --orphan languages-output
+
+          rm -rf ./*
+
+          cp ../dist/languages.svg .
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add languages.svg
+
+          git commit -m "chore: update top languages" || exit 0
+
+          git push --force origin languages-output
