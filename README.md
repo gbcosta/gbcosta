@@ -68,6 +68,6 @@
 
 <br clear="both">
 
-<img data-importer="snake" src="https://raw.githubusercontent.com/gbcosta/gbcosta/snake-output/snake.svg" alt="Snake animation" />
+<img data-importer="snake" src="https://raw.githubusercontent.com/gbcosta/snake-output/snake.svg" alt="Snake animation" />
 
 ###
