@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="495" height="195" viewBox="0 0 495 195">
+  <rect width="495" height="195" rx="10" fill="#0d1117"/>
+
+  <text x="25" y="40" fill="#58a6ff" font-size="22" font-family="Arial, sans-serif" font-weight="bold">
+    GitHub Stats
+  </text>
+
+  <text x="25" y="75" fill="#c9d1d9" font-size="16" font-family="Arial, sans-serif">
+    Total Commits
+  </text>
+  <text x="300" y="75" fill="#f0f6fc" font-size="16" font-family="Arial, sans-serif" font-weight="bold">
+    152
+  </text>
+
+  <text x="25" y="105" fill="#c9d1d9" font-size="16" font-family="Arial, sans-serif">
+    Pull Requests
+  </text>
+  <text x="300" y="105" fill="#f0f6fc" font-size="16" font-family="Arial, sans-serif" font-weight="bold">
+    0
+  </text>
+
+  <text x="25" y="135" fill="#c9d1d9" font-size="16" font-family="Arial, sans-serif">
+    Issues
+  </text>
+  <text x="300" y="135" fill="#f0f6fc" font-size="16" font-family="Arial, sans-serif" font-weight="bold">
+    0
+  </text>
+
+  <text x="25" y="165" fill="#c9d1d9" font-size="16" font-family="Arial, sans-serif">
+    Stars
+  </text>
+  <text x="300" y="165" fill="#f0f6fc" font-size="16" font-family="Arial, sans-serif" font-weight="bold">
+    0
+  </text>
+</svg>
