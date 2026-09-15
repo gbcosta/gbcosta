@@ -212,14 +212,23 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git clone \
+            --depth 1 \
             --branch languages-output \
             --single-branch \
             "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" \
+            output || \
+          git clone \
+            --depth 1 \
+            "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" \
             output
 
-          cp dist/languages.svg output/languages.svg
-
           cd output
+
+          git checkout --orphan languages-output
+
+          rm -rf ./*
+
+          cp ../dist/languages.svg .
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -228,4 +237,4 @@ jobs:
 
           git commit -m "chore: update top languages" || exit 0
 
-          git push origin languages-output
+          git push --force origin languages-output
