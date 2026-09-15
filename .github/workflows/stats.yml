@@ -13,22 +13,132 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Generate stats
+      - name: Generate stats SVG
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           mkdir -p dist
 
-          curl -L \
-            "https://github-readme-stats.vercel.app/api?username=gbcosta&show_icons=true&include_all_commits=true" \
-            -o dist/stats.svg
+          python3 - <<'PY'
+          import json
+          import os
+          import urllib.request
+
+          token = os.environ["GH_TOKEN"]
+          username = "gbcosta"
+
+          query = """
+          query($login: String!) {
+            user(login: $login) {
+              name
+              login
+              followers {
+                totalCount
+              }
+              following {
+                totalCount
+              }
+              repositories(ownerAffiliations: OWNER, first: 100) {
+                totalCount
+                nodes {
+                  stargazerCount
+                  forkCount
+                }
+              }
+              contributionsCollection {
+                totalCommitContributions
+                totalPullRequestContributions
+                totalIssueContributions
+              }
+            }
+          }
+          """
+
+          data = json.dumps({
+              "query": query,
+              "variables": {"login": username}
+          }).encode()
+
+          request = urllib.request.Request(
+              "https://api.github.com/graphql",
+              data=data,
+              headers={
+                  "Authorization": f"Bearer {token}",
+                  "Content-Type": "application/json",
+                  "User-Agent": "github-actions"
+              }
+          )
+
+          with urllib.request.urlopen(request) as response:
+              result = json.load(response)
+
+          user = result["data"]["user"]
+          repos = user["repositories"]["nodes"]
+
+          stars = sum(repo["stargazerCount"] for repo in repos)
+          forks = sum(repo["forkCount"] for repo in repos)
+
+          commits = user["contributionsCollection"]["totalCommitContributions"]
+          prs = user["contributionsCollection"]["totalPullRequestContributions"]
+          issues = user["contributionsCollection"]["totalIssueContributions"]
+
+          svg = f'''<svg xmlns="http://www.w3.org/2000/svg" width="495" height="195" viewBox="0 0 495 195">
+            <rect width="495" height="195" rx="10" fill="#0d1117"/>
+
+            <text x="25" y="40" fill="#58a6ff" font-size="22" font-family="Arial, sans-serif" font-weight="bold">
+              GitHub Stats
+            </text>
+
+            <text x="25" y="75" fill="#c9d1d9" font-size="16" font-family="Arial, sans-serif">
+              Total Commits
+            </text>
+            <text x="300" y="75" fill="#f0f6fc" font-size="16" font-family="Arial, sans-serif" font-weight="bold">
+              {commits}
+            </text>
+
+            <text x="25" y="105" fill="#c9d1d9" font-size="16" font-family="Arial, sans-serif">
+              Pull Requests
+            </text>
+            <text x="300" y="105" fill="#f0f6fc" font-size="16" font-family="Arial, sans-serif" font-weight="bold">
+              {prs}
+            </text>
+
+            <text x="25" y="135" fill="#c9d1d9" font-size="16" font-family="Arial, sans-serif">
+              Issues
+            </text>
+            <text x="300" y="135" fill="#f0f6fc" font-size="16" font-family="Arial, sans-serif" font-weight="bold">
+              {issues}
+            </text>
+
+            <text x="25" y="165" fill="#c9d1d9" font-size="16" font-family="Arial, sans-serif">
+              Stars
+            </text>
+            <text x="300" y="165" fill="#f0f6fc" font-size="16" font-family="Arial, sans-serif" font-weight="bold">
+              {stars}
+            </text>
+          </svg>'''
+
+          with open("dist/stats.svg", "w", encoding="utf-8") as file:
+              file.write(svg)
+
+          print("Stats generated successfully")
+          PY
+
+      - name: Validate SVG
+        run: |
+          head -c 100 dist/stats.svg
+          echo
 
       - name: Push Stats
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          git clone --depth 1 https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git output
+          git clone --depth 1 \
+            https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git \
+            output
 
           cd output
 
