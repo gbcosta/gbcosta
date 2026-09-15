@@ -1,4 +1,3 @@
-```yaml
 name: Generate Snake
 
 on:
@@ -42,4 +41,3 @@ jobs:
           git commit -m "chore: update contribution snake" || exit 0
 
           git push --force origin snake-output
-```
